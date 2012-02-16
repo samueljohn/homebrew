@@ -2,76 +2,59 @@ require 'formula'
 
 class Libsvm < Formula
   url 'http://www.csie.ntu.edu.tw/~cjlin/libsvm/libsvm-3.11.tar.gz'
-  homepage 'http://www.csie.ntu.edu.tw/~cjlin/libsvm/'
   md5 '44d2a3a611280ecd0d66aafe0d52233e'
+  homepage 'http://www.csie.ntu.edu.tw/~cjlin/libsvm/'
 
-  def patches
-    # Patches Makefile for Python egg creation
-    DATA
+  def options
+    [ "--python", "Install Python bindings."]
   end
 
   def install
+    # http://stackoverflow.com/questions/4580789/cmake-mac-os-x-ld-unknown-option-soname
     inreplace 'Makefile', '-soname', '-install_name'
-    inreplace 'Makefile', 'libsvm.so.$(SHVER)', 'libsvm.$(SHVER).dylib'
 
     system "make"
     system "make lib"
-    ln_s 'libsvm.2.dylib', 'libsvm.dylib'
+    # Make the built lib Mac conform, so later python can find_library("libsvm")
+    ln_s 'libsvm.so.2', 'libsvm.dylib'
 
-    # Install C interface and binaries
+    if ARGV.include? "--python"
+      Dir.chdir "python" do
+        system "make"
+        # Python bindings are just two plain .py files:
+        cp( ["svm.py", "svmutil.py"],
+            "#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages/",
+            :verbose => true)
+      end
+      Dir.chdir "tools" do
+        mkdir_p "#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages/svmtools"
+        cp( ["checkdata.py", "easy.py", "grid.py", "subset.py"],
+            "#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages/svmtools",
+            :verbose => true )
+      end
+    end
+
     bin.install ['svm-scale', 'svm-train', 'svm-predict']
-    lib.install ['libsvm.2.dylib', 'libsvm.dylib']
+    lib.install ['libsvm.so.2', 'libsvm.dylib']
     include.install ['svm.h']
-
-    # Copy Python egg archive
-    prefix.install ['python/package/dist/LibSVM-3.11.tar.gz']
   end
 
-  def caveats
-    general_caveats = <<-EOF.undent
-      LibSVM has been installed!
-      If you need the Python module, you can run :
+  if ARGV.include? "--python"
+    def caveats; <<-EOS.undent
+      For non-homebrew Python, you need to amend your PYTHONPATH like so:
+        export PYTHONPATH=#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages:$PYTHONPATH
+      Libsvm tools have bin installed to:
+        "#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages/svmtools"
+      EOS
+    end
+  end
 
-        sudo easy_install "#{prefix}/LibSVM-3.11.tar.gz"
-
-      This will hatch a Python egg in the system's default location.
-    EOF
+  def test
+    system "make test"
   end
 end
 
-__END__
---- a/Makefile	2012-02-11 20:14:54.000000000 +0100
-+++ b/Makefile	2012-02-11 21:14:54.000000000 +0100
-@@ -2,7 +2,7 @@
- CFLAGS = -Wall -Wconversion -O3 -fPIC
- SHVER = 2
- 
--all: svm-train svm-predict svm-scale
-+all: svm-train svm-predict svm-scale egg
- 
- lib: svm.o
- 	$(CXX) -shared -dynamiclib -Wl,-install_name,libsvm.so.$(SHVER) svm.o -o libsvm.so.$(SHVER)
-@@ -17,3 +17,23 @@
- 	$(CXX) $(CFLAGS) -c svm.cpp
- clean:
- 	rm -f *~ svm.o svm-train svm-predict svm-scale libsvm.so.$(SHVER)
-+
-+define _LIBSVM_SETUP_EGG
-+#!/usr/bin/env python
-+# coding=utf-8
-+
-+from setuptools import setup, find_packages
-+setup(
-+		name = "LibSVM",
-+		version = "3.11",
-+		packages = find_packages(),
-+)
-+endef
-+export _LIBSVM_SETUP_EGG
-+
-+egg:
-+	mkdir -p python/package/libsvm/
-+	touch python/package/libsvm/__init__.py
-+	cp python/svm.py python/svmutil.py python/package/libsvm/
-+	echo "$$_LIBSVM_SETUP_EGG" > python/package/setup.py
-+	cd python/package/; python setup.py sdist
+
+def which_python
+    "python" + `python -c 'import sys;print(sys.version[:3])'`.strip
+end

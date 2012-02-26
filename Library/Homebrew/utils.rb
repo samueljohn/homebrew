@@ -381,6 +381,11 @@ module MacOS extend self
     end
   end
 
+  def macosx_sdk_path(version=MACOS_VERSION)
+    `#{xcrun("xcodebuild")} -version -sdk 2>/dev/null` =~ %r[macosx#{version}\)\nSDKVersion: #{version}\nPath: (.*)$]
+    $1
+  end
+
   def xcode_version
     @xcode_version ||= begin
       # Xcode 4.3 xc* tools hang indefinately if xcode-select path is set thus

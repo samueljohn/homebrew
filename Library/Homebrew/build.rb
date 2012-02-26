@@ -27,6 +27,14 @@ at_exit do
     # dev tools into /usr/bin as a default
     ENV.prepend 'PATH', MacOS.dev_tools_path, ':' unless ORIGINAL_PATHS.include? MacOS.dev_tools_path
 
+    # For Xcode 4.3 (*without* the "Command Line Tools for Xcode") compiler and SDKs reside inside of Xcode:
+    if MacOS.xcode_version >= "4.3" and MacOS.xctoolchain_path
+      # Add lib and include from the current macosxsdk to compiler flags:
+      ENV.macosxsdk MacOS.version
+      # Some tools (clang, etc.) are in the xctoolchain dir of Xcode
+      ENV.append 'PATH', "#{MacOS.xctoolchain_path}/usr/bin", ":" unless ORIGINAL_PATHS.include? "#{MacOS.xctoolchain_path}/usr/bin"
+    end
+
     install(Formula.factory($0))
   rescue Exception => e
     if ENV['HOMEBREW_ERROR_PIPE']

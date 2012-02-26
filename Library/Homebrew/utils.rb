@@ -255,6 +255,38 @@ module MacOS extend self
     MACOS_VERSION
   end
 
+  def xcrun tool
+    if File.executable? "/usr/bin/#{tool}"
+      "/usr/bin/#{tool}"
+    elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 2>&1 1>/dev/null"
+      # xcrun was provided first with Xcode 4.3 and allows us to proxy
+      # tool usage thus avoiding various bugs
+      fn = `/usr/bin/xcrun -find #{tool}`.chomp
+      if File.executable? fn
+        fn
+      else
+        nil
+      end
+    else
+      # otherwise lets try and figure it out ourselves
+      fn = "#{MacOS.dev_tools_path}/#{tool}"
+      if File.executable? fn
+        fn
+      else
+        # This is for the use-case where xcode-select is not set up with
+        # Xcode 4.3. The tools in Xcode 4.3 are split over two locations,
+        # usually xcrun would figure that out for us, but it won't work if
+        # xcode-select is not configured properly.
+        fn = "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain/usr/bin/#{tool}"
+        if File.executable? fn
+          fn
+        else
+          nil
+        end
+      end
+    end
+  end
+
   def dev_tools_path
     @dev_tools_path ||= if File.file? "/usr/bin/cc" and File.file? "/usr/bin/make"
       # probably a safe enough assumption

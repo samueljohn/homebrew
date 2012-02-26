@@ -32,8 +32,8 @@ module HomebrewEnvExtension
     unless ENV['CC']
       @compiler = MacOS.default_compiler
       self.send @compiler
-      ENV['CC']  = '/usr/bin/cc'
-      ENV['CXX'] = '/usr/bin/c++'
+      ENV['CC']  = MacOS.xcrun("cc")
+      ENV['CXX'] = MacOS.xcrun("c++")
     end
 
     # In rare cases this may break your builds, as the tool for some reason wants
@@ -134,8 +134,8 @@ module HomebrewEnvExtension
     # However they still provide a gcc symlink to llvm
     # But we don't want LLVM of course.
 
-    ENV['CC'] = xcrun "gcc-4.2"
-    ENV['CXX'] = xcrun "g++-4.2"
+    ENV['CC'] = MacOS.xcrun "gcc-4.2"
+    ENV['CXX'] = MacOS.xcrun "g++-4.2"
 
     unless ENV['CC']
       ENV['CC'] = "#{HOMEBREW_PREFIX}/bin/gcc-4.2"
@@ -154,15 +154,15 @@ module HomebrewEnvExtension
   alias_method :gcc_4_2, :gcc
 
   def llvm
-    self['CC']  = xcrun "llvm-gcc"
-    self['CXX'] = xcrun "llvm-g++"
+    self['CC']  = MacOS.xcrun "llvm-gcc"
+    self['CXX'] = MacOS.xcrun "llvm-g++"
     set_cpu_cflags 'core2 -msse4', :penryn => 'core2 -msse4.1', :core2 => 'core2', :core => 'prescott'
     @compiler = :llvm
   end
 
   def clang
-    self['CC']  = xcrun "clang"
-    self['CXX'] = xcrun "clang++"
+    self['CC']  = MacOS.xcrun "clang"
+    self['CXX'] = MacOS.xcrun "clang++"
     replace_in_cflags(/-Xarch_i386 (-march=\S*)/, '\1')
     # Clang mistakenly enables AES-NI on plain Nehalem
     set_cpu_cflags 'native', :nehalem => 'native -Xclang -target-feature -Xclang -aes'

@@ -308,20 +308,7 @@ module MacOS extend self
   end
 
   def default_cc
-    cc = unless xctools_fucked?
-      out = `/usr/bin/xcrun -find cc 2> /dev/null`.chomp
-      out if $?.success?
-    end
-    cc = "#{dev_tools_path}/cc" if cc.nil? or cc.empty?
-
-    unless File.executable? cc
-      # If xcode-select isn't setup then xcrun fails and on Xcode 4.3
-      # the cc binary is not at #{dev_tools_path}. This return is almost
-      # worthless however since in this particular setup nothing much builds
-      # but I wrote the code now and maybe we'll fix the other issues later.
-      cc = "#{xcode_prefix}/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc"
-    end
-
+    cc = xcrun 'cc'
     Pathname.new(cc).realpath.basename.to_s rescue nil
   end
 
@@ -438,22 +425,22 @@ module MacOS extend self
   def llvm_build_version
     # for Xcode 3 on OS X 10.5 this will not exist
     # NOTE may not be true anymore but we can't test
-    @llvm_build_version ||= if File.exist? "#{dev_tools_path}/llvm-gcc"
-      `#{dev_tools_path}/llvm-gcc --version` =~ /LLVM build (\d{4,})/
+    @llvm_build_version ||= if File.exist? xcrun("llvm-gcc")
+      `#{xcrun("llvm-gcc")} --version` =~ /LLVM build (\d{4,})/
       $1.to_i
     end
   end
 
   def clang_version
-    @clang_version ||= if File.exist? "#{dev_tools_path}/clang"
-      `#{dev_tools_path}/clang --version` =~ /clang version (\d\.\d)/
+    @clang_version ||= if File.exist? xcrun("clang")
+      `#{xcrun("clang")} --version` =~ /clang version (\d\.\d)/
       $1
     end
   end
 
   def clang_build_version
-    @clang_build_version ||= if File.exist? "#{dev_tools_path}/clang"
-      `#{dev_tools_path}/clang --version` =~ %r[tags/Apple/clang-(\d{2,})]
+    @clang_build_version ||= if File.exist? xcrun("clang")
+      `#{xcrun("clang")} --version` =~ %r[tags/Apple/clang-(\d{2,})]
       $1.to_i
     end
   end

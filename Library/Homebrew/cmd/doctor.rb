@@ -218,9 +218,9 @@ def check_gcc_versions
     end
   end
 
-  unless File.exist? '/usr/bin/cc'
+  unless File.exist? MacOS.xcrun 'cc'
     puts <<-EOS.undent
-      You have no /usr/bin/cc.
+      You have no cc.
       This means you probably can't build *anything*. You need to install the CLI
       Tools for Xcode. You can either download this from http://connect.apple.com/
       or install them from inside Xcode’s preferences. Homebrew does not require

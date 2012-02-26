@@ -28,7 +28,7 @@ class Keg
     dylib = dylib.to_s
 
     ENV['HOMEBREW_DYLIB'] = dylib # solves all shell escaping problems
-    install_names = `otool -L "$HOMEBREW_DYLIB"`.split "\n"
+    install_names = `#{MacOS.xcrun("otool")} -L "$HOMEBREW_DYLIB"`.split "\n"
 
     install_names.shift # first line is fluff
     install_names.map!{ |s| OTOOL_RX =~ s && $1 }

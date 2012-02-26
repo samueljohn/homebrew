@@ -212,7 +212,7 @@ Please take one of the following actions:
     append_to_cflags "-L#{sdk}/usr/lib"
     append_to_cflags "-I#{sdk}/usr/include"
     append 'LDFLAGS', "-L#{sdk}/usr/lib"
-    append 'LDFLAGS', "-I#{sdk}/usr/include" # some (e.g. python only forward LDFLAGS to cc)
+    append 'LDFLAGS', "-I#{sdk}/usr/include" # some (e.g. python) only forward LDFLAGS to cc
     append 'CPPFLAGS', "-I#{sdk}/usr/include"
     append_to_cflags("-mmacosx-version-min=#{version}")
   end

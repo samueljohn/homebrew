@@ -94,33 +94,6 @@ module HomebrewEnvExtension
   end
   alias_method :gcc_4_0, :gcc_4_0_1
 
-  def xcrun tool
-    if File.executable? "/usr/bin/#{tool}"
-      "/usr/bin/#{tool}"
-    elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 1>/dev/null 2>&1"
-      # xcrun was provided first with Xcode 4.3 and allows us to proxy
-      # tool usage thus avoiding various bugs
-      "/usr/bin/xcrun #{tool}"
-    else
-      # otherwise lets try and figure it out ourselves
-      fn = "#{MacOS.dev_tools_path}/#{tool}"
-      if File.executable? fn
-        fn
-      else
-        # This is for the use-case where xcode-select is not set up with
-        # Xcode 4.3. The tools in Xcode 4.3 are split over two locations,
-        # usually xcrun would figure that out for us, but it won't work if
-        # xcode-select is not configured properly.
-        fn = "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain/usr/bin/#{tool}"
-        if File.executable? fn
-          fn
-        else
-          nil
-        end
-      end
-    end
-  end
-
   # if your formula doesn't like CC having spaces use this
   def expand_xcrun
     ENV['CC'] =~ %r{/usr/bin/xcrun (.*)}

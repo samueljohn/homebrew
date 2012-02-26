@@ -258,7 +258,7 @@ module MacOS extend self
   def xcrun tool
     if File.executable? "/usr/bin/#{tool}"
       "/usr/bin/#{tool}"
-    elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 2>&1 1>/dev/null"
+    elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 1>/dev/null 2>&1"
       # xcrun was provided first with Xcode 4.3 and allows us to proxy
       # tool usage thus avoiding various bugs
       fn = `/usr/bin/xcrun -find #{tool}`.chomp

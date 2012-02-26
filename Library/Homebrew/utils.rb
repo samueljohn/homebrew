@@ -302,6 +302,15 @@ module MacOS extend self
     end
   end
 
+  def xctoolchain_path
+    # beginning with Xcode 4.3, clang and some other tools are located in a xctoolchain dir.
+    @xctoolchain_path ||= if Pathname.new("#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain").exist?
+      "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain"
+    else
+      nil # or better return "/", so that appending "/usr/bin" works in any case?
+    end
+  end
+
   def xctools_fucked?
     # Xcode 4.3 tools hang if "/" is set
     `/usr/bin/xcode-select -print-path 2>/dev/null`.chomp == "/"

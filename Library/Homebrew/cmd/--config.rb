@@ -77,10 +77,11 @@ module Homebrew extend self
     OS X: #{MACOS_FULL_VERSION}
     Kernel Architecture: #{`uname -m`.chomp}
     Xcode: #{xcode_version}
+    Dev-tools path: #{MacOS.dev_tools_path}
     GCC-4.0: #{gcc_40 ? "build #{gcc_40}" : "N/A"}
     GCC-4.2: #{gcc_42 ? "build #{gcc_42}" : "N/A"}
     LLVM: #{llvm ? "build #{llvm}" : "N/A"}
-    Clang: #{clang ? "#{clang} build #{clang_build}" : "N/A"}
+    Clang: #{clang ? "#{clang} build #{clang_build} (#{MacOS.xcrun('clang')})" : "N/A"} 
     MacPorts or Fink? #{macports_or_fink_installed?}
     X11 installed? #{x11_installed?}
     System Ruby: #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}

@@ -218,15 +218,45 @@ Please take one of the following actions:
     end
   end
 
-  def osx_10_4
-    self['MACOSX_DEPLOYMENT_TARGET']="10.4"
+  def remove_macosxsdk version=MacOS.version
+    # Remove the current sdk
     remove_from_cflags(/ ?-mmacosx-version-min=10\.\d/)
-    append_to_cflags('-mmacosx-version-min=10.4')
+    sdk = MacOS.macosx_sdk_path(version)
+    remove_from_cflags "-isysroot #{sdk}"
+    remove_from_cflags "-L#{sdk}/usr/lib"
+    remove_from_cflags "-I#{sdk}/usr/include"
+    remove 'LDFLAGS', "-L#{sdk}/usr/lib"
+    remove 'LDFLAGS', "-I#{sdk}/usr/include"
+    #remove 'CPPFLAGS', "-isysroot #{sdk}"
+    remove 'CPPFLAGS', "-I#{sdk}/usr/include"
+  end
+  def macosxsdk version=MacOS.version
+    version = version.to_s
+    remove_macosxsdk
+    self['MACOSX_DEPLOYMENT_TARGET']=version
+    sdk = MacOS.macosx_sdk_path(version)
+    append_to_cflags "-isysroot #{sdk}"
+    append_to_cflags "-L#{sdk}/usr/lib"
+    append_to_cflags "-I#{sdk}/usr/include"
+    append 'LDFLAGS', "-L#{sdk}/usr/lib"
+    append 'LDFLAGS', "-I#{sdk}/usr/include" # some (e.g. python only forward LDFLAGS to cc)
+    append 'CPPFLAGS', "-I#{sdk}/usr/include"
+    append_to_cflags("-mmacosx-version-min=#{version}")
+  end
+  def osx_10_4
+    macosxsdk "10.4"
   end
   def osx_10_5
-    self['MACOSX_DEPLOYMENT_TARGET']="10.5"
-    remove_from_cflags(/ ?-mmacosx-version-min=10\.\d/)
-    append_to_cflags('-mmacosx-version-min=10.5')
+    macosxsdk "10.5"
+  end
+  def osx_10_6
+    macosxsdk "10.6"
+  end
+  def osx_10_7
+    macosxsdk "10.7"
+  end
+  def osx_10_8
+    macosxsdk "10.8"
   end
 
   def minimal_optimization

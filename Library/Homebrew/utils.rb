@@ -255,6 +255,14 @@ module MacOS extend self
     MACOS_VERSION
   end
 
+  def command_line_tools_installed?
+    # true if compilers, libs and includes etc. are located below /usr
+    # Beginning with Xcode 4.3, the dev tools are no longer installed
+    # in /usr and SDKs no longer in /Developer by default.
+    # But Apple provides an optional "Command Line Tools for Xcode" package.
+    dev_tools_path == "/usr/bin" 
+  end
+
   def xcrun tool
     if File.executable? "/usr/bin/#{tool}"
       "/usr/bin/#{tool}"

@@ -198,11 +198,29 @@ def check_gcc_versions
   end
 
   if MacOS.xcode_version == nil
+    # no Xcode, now it depends on the OS X version...
+    if MacOS.lion?
+      unless MacOS.command_line_tools_installed?
+        puts <<-EOS.undent
+          No compiler found in /usr/bin!
+          No Xcode version found!
+
+          To fix this, either:
+          - Install the "Command Line Tools for Xcode" from http://connect.apple.com/
+            Homebrew does not require all of Xcode, you only need the CLI tools package!
+            (However, you need a (free) Apple Developer ID.)
+          - Install Xcode from the Mac App Store. (Normal Apple ID is sufficient, here)
+        EOS
+      else
+        # Xcode is not needed if the CLT are installed, so we keep silence
+      end
+    else
+      # older Mac systems should just install their old Xcode. We don't advertize the CLT.
       puts <<-EOS.undent
         We couldn't detect any version of Xcode.
         If you downloaded Xcode from the App Store, you may need to run the installer.
-
       EOS
+    end
   elsif MacOS.xcode_version < "4.0"
     if gcc_40 == nil
       puts <<-EOS.undent
@@ -218,14 +236,16 @@ def check_gcc_versions
     end
   end
 
-  unless File.exist? MacOS.xcrun 'cc'
-    puts <<-EOS.undent
-      You have no cc.
-      This means you probably can't build *anything*. You need to install the CLI
-      Tools for Xcode. You can either download this from http://connect.apple.com/
-      or install them from inside Xcode’s preferences. Homebrew does not require
-      all of Xcode! You only need the CLI tools package!
-    EOS
+  unless MacOS.command_line_tools_installed?
+    if MacOS.xcode_version >= "4.3"
+      puts <<-EOS.undent
+        Experimental support for using Xcode 4.3 without the "Command Line Tools".
+      EOS
+    else
+      puts <<-EOS.undent
+        No compiler found in /usr/bin!
+      EOS
+    end
   end
 end
 

@@ -390,8 +390,25 @@ module MacOS extend self
   end
 
   def macosx_sdk_path(version=MACOS_VERSION)
-    `#{xcrun("xcodebuild")} -version -sdk 2>/dev/null` =~ %r[macosx#{version}\)\nSDKVersion: #{version}\nPath: (.*)$]
-    $1
+    @macosx_sdk_path ||= begin
+      if not MacOS.xctools_fucked?
+        # grep it from the xcodebuild info
+        # unfortunately, I don't a better way to directly get the path out of xcodebuild
+        `#{xcrun('xcodebuild')} -version -sdk 2>/dev/null` =~ %r[macosx#{version}\)\nSDKVersion: #{version}\nPath: (.*)$]
+        path = $1
+      elsif File.directory? '/Developer/SDKs/MacOS#{version}.sdk'
+        # the old default (or wild wild west style)
+        path = "/Developer/SDKs/MacOS#{version}.sdk"
+      elsif File.directory? "#{xcode_prefix}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX#{version}.sdk"
+        # xcode_prefix is pretty smart, so lets look inside to find the sdk
+        path = "#{xcode_prefix}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX#{version}.sdk"
+      end
+      if path.empty? or not File.directory? path
+        nil
+      else
+        Pathname.new path
+      end
+    end
   end
 
   def xcode_version

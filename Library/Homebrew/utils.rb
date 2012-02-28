@@ -264,6 +264,7 @@ module MacOS extend self
   end
 
   def xcrun tool
+    # always use this xcrun to locate tools (cc, make etc.)!
     if File.executable? "/usr/bin/#{tool}"
       "/usr/bin/#{tool}"
     elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 1>/dev/null 2>&1"
@@ -315,7 +316,9 @@ module MacOS extend self
     @xctoolchain_path ||= if Pathname.new("#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain").exist?
       "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain"
     else
-      nil # or better return "/", so that appending "/usr/bin" works in any case?
+      # ok, there are no Toolchains in xcode_prefix
+      # and that's ok as long as everything is in /usr (i.e. command_line_tools_installed?)
+      nil
     end
   end
 

@@ -204,27 +204,36 @@ Please take one of the following actions:
   def remove_macosxsdk version=MacOS.version
     # Remove the current sdk
     remove_from_cflags(/ ?-mmacosx-version-min=10\.\d/)
-    sdk = MacOS.macosx_sdk_path(version)
-    remove_from_cflags "-isysroot #{sdk}"
-    remove_from_cflags "-L#{sdk}/usr/lib"
-    remove_from_cflags "-I#{sdk}/usr/include"
-    remove 'LDFLAGS', "-L#{sdk}/usr/lib"
-    remove 'LDFLAGS', "-I#{sdk}/usr/include"
-    #remove 'CPPFLAGS', "-isysroot #{sdk}"
-    remove 'CPPFLAGS', "-I#{sdk}/usr/include"
+    unless MacOS.command_line_tools_installed? 
+      sdk = MacOS.macosx_sdk_path(version)
+      remove_from_cflags "-isysroot #{sdk}"
+      remove_from_cflags "-isystem #{sdk}/usr/include"
+      remove_from_cflags "-L#{sdk}/usr/lib"
+      remove_from_cflags "-I#{sdk}/usr/include"
+      remove 'LDFLAGS', "-L#{sdk}/usr/lib"
+      remove 'LDFLAGS', "-I#{sdk}/usr/include"
+      remove 'CPPFLAGS', "-I#{sdk}/usr/include"
+      remove 'CPPFLAGS', "-isystem #{sdk}/usr/include"
+    end
   end
   def macosxsdk version=MacOS.version
     version = version.to_s
     remove_macosxsdk
-    self['MACOSX_DEPLOYMENT_TARGET']=version
-    sdk = MacOS.macosx_sdk_path(version)
-    append_to_cflags "-isysroot #{sdk}"
-    append_to_cflags "-L#{sdk}/usr/lib"
-    append_to_cflags "-I#{sdk}/usr/include"
-    append 'LDFLAGS', "-L#{sdk}/usr/lib"
-    append 'LDFLAGS', "-I#{sdk}/usr/include" # some (e.g. python) only forward LDFLAGS to cc
-    append 'CPPFLAGS', "-I#{sdk}/usr/include"
     append_to_cflags("-mmacosx-version-min=#{version}")
+    self['MACOSX_DEPLOYMENT_TARGET']=version
+    unless MacOS.command_line_tools_installed?
+      # extra setup to support Xcode 4.3 without CLT
+      sdk = MacOS.macosx_sdk_path(version)
+      append_to_cflags "-isysroot #{sdk}"              # definetly needed
+      append_to_cflags "-isystem #{sdk}/usr/include"   # perhaps needed
+      append_to_cflags "-L#{sdk}/usr/lib"              # definetly needed
+      append_to_cflags "-I#{sdk}/usr/include"          # definetly needed
+      append 'LDFLAGS', "-L#{sdk}/usr/lib"             # definetly needed
+      append 'LDFLAGS', "-I#{sdk}/usr/include"         # some (e.g. python) only forward LDFLAGS to cc
+      append 'CPPFLAGS', "-isystem #{sdk}/usr/include" # don't know
+      append 'CPPFLAGS', "-I#{sdk}/usr/include"        # don't know
+      # todo: do we need to set GCC_EXEC_PREFIX (http://gcc.gnu.org/onlinedocs/gcc/Environment-Variables.html)
+    end
   end
   def osx_10_4
     macosxsdk "10.4"

@@ -26,7 +26,11 @@ module Homebrew extend self
   end
 
   def xcode_version
-    @xcode_version || MacOS.xcode_version
+    @xcode_version ||= MacOS.xcode_version
+  end
+
+  def clt
+    @clt ||= "(Command Line Tools installed)" if xcode_version >= "4.3" and MacOS.command_line_tools_installed?
   end
 
   def sha
@@ -76,8 +80,8 @@ module Homebrew extend self
     Hardware: #{Hardware.cores_as_words}-core #{Hardware.bits}-bit #{Hardware.intel_family}
     OS X: #{MACOS_FULL_VERSION}
     Kernel Architecture: #{`uname -m`.chomp}
-    Xcode: #{xcode_version}
-    Dev-tools path: #{MacOS.dev_tools_path}
+    Xcode: #{xcode_version} #{clt}
+    Dev-tools: #{MacOS.dev_tools_path}
     GCC-4.0: #{gcc_40 ? "build #{gcc_40}" : "N/A"}
     GCC-4.2: #{gcc_42 ? "build #{gcc_42}" : "N/A"}
     LLVM: #{llvm ? "build #{llvm}" : "N/A"}

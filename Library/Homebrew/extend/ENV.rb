@@ -41,6 +41,16 @@ module HomebrewEnvExtension
     # build more successfully because we are changing CC and many build systems
     # don't react properly to that.
     self['LD'] = self['CC']
+
+    # For Xcode 4.3 (*without* the "Command Line Tools for Xcode") compiler and SDKs reside inside of Xcode:
+    unless MacOS.command_line_tools_installed? 
+      # Add lib and include etc. from the current macosxsdk to compiler flags:
+      ENV.macosxsdk MacOS.version
+      if MacOS.xcode_version >= "4.3" and MacOS.xctoolchain_path
+        # Some tools (clang, etc.) are in the xctoolchain dir of Xcode
+        ENV.append 'PATH', "#{MacOS.xctoolchain_path}/usr/bin", ":" unless ORIGINAL_PATHS.include? "#{MacOS.xctoolchain_path}/usr/bin"
+      end
+    end
   end
 
   def deparallelize

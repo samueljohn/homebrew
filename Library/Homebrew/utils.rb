@@ -266,13 +266,13 @@ module MacOS extend self
   def xcrun tool
     # always use this xcrun to locate tools (cc, make etc.)!
     if File.executable? "/usr/bin/#{tool}"
-      "/usr/bin/#{tool}"
+      Pathname.new "/usr/bin/#{tool}"
     elsif not MacOS.xctools_fucked? and system "/usr/bin/xcrun -find #{tool} 1>/dev/null 2>&1"
       # xcrun was provided first with Xcode 4.3 and allows us to proxy
       # tool usage thus avoiding various bugs
       fn = `/usr/bin/xcrun -find #{tool}`.chomp
       if File.executable? fn
-        fn
+        Pathname.new fn
       else
         nil
       end
@@ -280,7 +280,7 @@ module MacOS extend self
       # otherwise lets try and figure it out ourselves
       fn = "#{MacOS.dev_tools_path}/#{tool}"
       if File.executable? fn
-        fn
+        Pathname.new fn
       else
         # This is for the use-case where xcode-select is not set up with
         # Xcode 4.3. The tools in Xcode 4.3 are split over two locations,
@@ -288,7 +288,7 @@ module MacOS extend self
         # xcode-select is not configured properly.
         fn = "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain/usr/bin/#{tool}"
         if File.executable? fn
-          fn
+          Pathname.new fn
         else
           nil
         end
@@ -305,19 +305,19 @@ module MacOS extend self
       Pathname.new(xcrun 'make').dirname
     elsif File.exist? "#{xcode_prefix}/usr/bin/make"
       # cc stopped existing with Xcode 4.3, there are c89 and c99 options though
-      "#{xcode_prefix}/usr/bin"
+      Pathname.new "#{xcode_prefix}/usr/bin"
     else
       # yes this seems dumb, but we can't throw because the existance of
       # dev tools is not mandatory for installing formula. Eventually we
       # should make forumla specify if they need dev tools or not.
-      "/usr/bin"
+      Pathname.new "/usr/bin"
     end
   end
 
   def xctoolchain_path
     # beginning with Xcode 4.3, clang and some other tools are located in a xctoolchain dir.
     @xctoolchain_path ||= if Pathname.new("#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain").exist?
-      "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain"
+      Pathname.new "#{MacOS.xcode_prefix}/Toolchains/XcodeDefault.xctoolchain"
     else
       # ok, there are no Toolchains in xcode_prefix
       # and that's ok as long as everything is in /usr (i.e. command_line_tools_installed?)
@@ -389,7 +389,7 @@ module MacOS extend self
         if path.empty? or not File.directory? path
           nil
         else
-          path
+          Pathname.new path
         end
       end
     end

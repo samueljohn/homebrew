@@ -297,10 +297,13 @@ module MacOS extend self
   end
 
   def dev_tools_path
-    @dev_tools_path ||= if File.file? "/usr/bin/cc" and File.file? "/usr/bin/make"
-      # probably a safe enough assumption
-      "/usr/bin"
-    elsif File.file? "#{xcode_prefix}/usr/bin/make"
+    @dev_tools_path ||= if File.exist? "/usr/bin/cc" and File.exist? "/usr/bin/make"
+      # probably a safe enough assumption (the unix way)
+      Pathname.new "/usr/bin"
+    elsif not xctools_fucked?
+      # The new way of finding stuff via xcrun:
+      Pathname.new(xcrun 'make').dirname
+    elsif File.exist? "#{xcode_prefix}/usr/bin/make"
       # cc stopped existing with Xcode 4.3, there are c89 and c99 options though
       "#{xcode_prefix}/usr/bin"
     else

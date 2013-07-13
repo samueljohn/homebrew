@@ -5,9 +5,12 @@ class Scapy < Formula
   url 'http://www.secdev.org/projects/scapy/files/scapy-2.2.0.tar.gz'
   sha1 'ae0a9947a08a01a84abde9db12fed074ac888e47'
 
+  depends_on :python
   depends_on 'libdnet'
 
   def install
-    system 'python', 'setup.py', 'install', "--prefix=#{prefix}"
+    python do
+      system python, 'setup.py', 'install', "--prefix=#{prefix}"
+    end
   end
 end
